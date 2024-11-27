@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Accidents by Emirate and Year</title>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.24.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.23.0"></script>
+</head>
+<body>
+    <h1>Traffic Accidents by Emirate and Year</h1>
+    <div id="vis"></div>
+
+    <script>
+        const spec = {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "title": "Traffic Accidents by Emirate and Year",
+          "data": {
+            "url": "https://raw.githubusercontent.com/BatoolMasadeh/Accident-type/refs/heads/main/FCSA%2CDF_TRA_TYPE%2C3.0.0%2B...A.........csv",
+            "format": {"type": "csv"}
+          },
+          "vconcat": [
+            {
+              "width": 800,
+              "height": 300,
+              "mark": {
+                "type": "bar",
+                "tooltip": true
+              },
+              "encoding": {
+                "x": {
+                  "field": "TIME_PERIOD",
+                  "type": "ordinal",
+                  "title": "Year"
+                },
+                "y": {
+                  "aggregate": "sum",
+                  "field": "OBS_VALUE",
+                  "type": "quantitative",
+                  "title": "Number of Accidents"
+                },
+                "color": {
+                  "field": "Reference area",
+                  "type": "nominal",
+                  "title": "Emirate",
+                  "scale": {
+                    "scheme": "pastel1"
+                  }
+                },
+                "tooltip": [
+                  {"field": "TIME_PERIOD", "type": "ordinal", "title": "Year"},
+                  {"field": "Reference area", "type": "nominal", "title": "Emirate"},
+                  {
+                    "aggregate": "sum",
+                    "field": "OBS_VALUE",
+                    "type": "quantitative",
+                    "title": "Total Accidents"
+                  }
+                ]
+              },
+              "transform": [
+                {"filter": "datum['Accident Type'] != 'Total'"},
+                {"filter": "datum['Reference area'] != 'UAE'"}
+              ],
+              "params": [
+                {
+                  "name": "selection",
+                  "select": {
+                    "type": "point",
+                    "fields": ["TIME_PERIOD", "Reference area"]
+                  }
+                }
+              ]
+            },
+            {
+              "width": 300,
+              "height": 300,
+              "mark": {
+                "type": "arc",
+                "tooltip": true
+              },
+              "encoding": {
+                "theta": {
+                  "aggregate": "sum",
+                  "field": "OBS_VALUE",
+                  "type": "quantitative",
+                  "title": "Total Accidents"
+                },
+                "color": {
+                  "field": "Accident Type",
+                  "type": "nominal",
+                  "title": "Accident Type",
+                  "scale": {
+                    "scheme": "pastel2"
+                  }
+                },
+                "tooltip": [
+                  {"field": "Accident Type", "type": "nominal", "title": "Accident Type"},
+                  {
+                    "field": "OBS_VALUE",
+                    "type": "quantitative",
+                    "title": "Number of Accidents"
+                  },
+                  {
+                    "field": "percentage",
+                    "type": "quantitative",
+                    "title": "Percentage",
+                    "format": ".1%"
+                  }
+                ]
+              },
+              "transform": [
+                {"filter": {"param": "selection"}},
+                {"filter": "datum['Accident Type'] != 'Total'"},
+                {"filter": "datum['Reference area'] != 'UAE'"},
+                {
+                  "joinaggregate": [
+                    {"op": "sum", "field": "OBS_VALUE", "as": "total_accidents"}
+                  ]
+                },
+                {
+                  "calculate": "datum.OBS_VALUE / datum.total_accidents",
+                  "as": "percentage"
+                }
+              ]
+            }
+          ]
+        };
+
+        vegaEmbed('#vis', spec).catch(console.error);
+    </script>
+</body>
+</html>
